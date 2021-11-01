@@ -27,4 +27,4 @@ def Reconocimiento_Carteles_Rombos(imagen):
     # print(pytesseract.image_to_string(img_rgb))
     # cv.waitKey(0)
 
-Reconocimiento_Carteles_Rombos("erebus-v21.2.2/game/worlds/textures/placard-6-poison.png")
+print(Reconocimiento_Carteles_Rombos("erebus-v21.2.2/game/worlds/textures/placard-6-poison.png"))

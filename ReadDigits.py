@@ -16,7 +16,7 @@ def Read_Digit(image):
 
     # Extrae numero de imagen
     data = pytesseract.image_to_string(invert, lang='eng', config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
-    print(data)
+    # print(data)
     #cv2.imshow('thresh', thresh)
     #cv2.imshow('opening', opening)
     #cv2.imshow('invert', invert)
