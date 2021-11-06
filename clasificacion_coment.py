@@ -1,4 +1,4 @@
-# Importamos la libreria a utilizar
+# Importamos la libreria a utilizar 
 import cv2 as cv
 
 # leemos una imagen alojada en nuestra PC
