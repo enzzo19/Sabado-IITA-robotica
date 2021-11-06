@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 
-img = cv.imread(r"C:/Users/enzzo/OneDrive/Escritorio/TestVictimS.png")
+img = cv.imread(r"Imagenes\TestVictimS.png")
 
 
 def classifyVictim(img):
