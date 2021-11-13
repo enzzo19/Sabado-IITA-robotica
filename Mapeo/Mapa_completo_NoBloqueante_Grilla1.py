@@ -18,11 +18,18 @@ distancia_sensor1 = robot.getDevice("distance sensor1")
 distancia_sensor1.enable(timeStep)
 maxima_distancia = 0.4
 
-#Motor initialization
+# Motor initialization
 ruedaIzquierda = robot.getDevice("wheel1 motor")
 ruedaDerecha = robot.getDevice("wheel2 motor")
 ruedaIzquierda.setPosition(float('inf'))
 ruedaDerecha.setPosition(float('inf'))
+
+# Encoder initialization
+encoderIzquierdo = ruedaIzquierda.getPositionSensor()
+encoderDerecho = ruedaDerecha.getPositionSensor()
+encoderIzquierdo.enable(timeStep)
+encoderDerecho.enable(timeStep)
+
 
 # Gyroscope initialization
 gyro = robot.getDevice("gyro")
@@ -45,6 +52,8 @@ estado = 0
 def avanzar(vel):
     ruedaIzquierda.setVelocity(vel)
     ruedaDerecha.setVelocity(vel)
+    encoderDerecho.setPosition(2.3)
+    encoderIzquierdo.setPosition(2.3)
 
 def girar(vel):
     ruedaIzquierda.setVelocity(-vel)
@@ -71,6 +80,7 @@ def rotar(angulo):
             angulo_actual += 360
         tiempo_anterior = tiempo_actual
         robot.step(timeStep)
+        angulo_actual = 0
     print("Rotacion finalizada.")
     # angulo_actual = 0
     return True
@@ -83,7 +93,6 @@ def MovimientoPa(angle,x0,y0,vel):
     margen = 0.02
     if rotar(angle):
         print("Rotacion de 90 terminada, me detengo")
-        avanzar(0)
     if not ((x0-margen<= x <= x0+margen) and (y0-margen <= y <= y0+margen)):
         print("Avanzamos, pa")
         avanzar(vel)
@@ -108,19 +117,19 @@ while robot.step(timeStep) != -1:
         print("Inicio etapa 0")
         if MovimientoPa(90,0.13,0,6) == True:
             estado = 1
-"""# Etapa 1
+# Etapa 1
     elif estado == 1:
     #GIRO 2: Gira 90 grados y avanza hasta el fondo del mapa
         print("Inicio etapa 1")
-        if MovimientoPa(90,0.14,0,6,90) == True:
-            estado = 2"""
+        if MovimientoPa(90,0,0,6) == True:
+            estado = 2
 
-"""# Etapa 2
+# Etapa 2
     elif estado == 2:
     #GIRO 3: Gira y avanza hasta la zona del pozo
         print("Inicio etapa 2")
-        if MovimientoPa(180,0.7,0.2,6):
-            estado = 2"""
+        if MovimientoPa(270,0,0,6):
+            estado = 2
 
     # #GIRO 4: Gira y avanza un poco, subiendo (que en realidad es bajando) por y hasta que llega a la última curva
     # print("Inicio etapa 4")
@@ -137,3 +146,8 @@ while robot.step(timeStep) != -1:
     # #GIRO 7: Llega al pozo. Gira y avanza, luego cae.
     # print("Inicio etapa 7")
     # MovimientoPa(90,2.7,4.2,-2.8,-1.3,6)
+
+# 0° --> Adelante
+# 90° --> Derecha
+# 180° --> De espalda
+# 270° --> Izquierda
