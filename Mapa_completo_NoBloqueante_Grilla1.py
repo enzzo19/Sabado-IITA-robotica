@@ -79,7 +79,7 @@ def rotar(angulo):
 # 2. Retorna:
 #           True: Cuando llega a las coordenadas [x,y]
 #           False: Cuando no llega a las coordenadas.
-def MovimientoPa(angle,x0,y0,vel,angle2):
+def MovimientoPa(angle,x0,y0,vel):
     margen = 0.02
     if rotar(angle):
         print("Rotacion de 90 terminada, me detengo")
@@ -89,7 +89,6 @@ def MovimientoPa(angle,x0,y0,vel,angle2):
         print("Avanzamos, pa")
         avanzar(vel)
         print("x:",x, "y:",y)
-        rotar(angle2)
         # El robot no llego a las coordenadas x,y
         return False
     else:
