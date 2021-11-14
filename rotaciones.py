@@ -1,5 +1,4 @@
 from controller import Robot
-import time
 
 timeStep = 32            # Set the time step for the simulation
 max_velocity = 6.28      # Set a maximum velocity time constant
