@@ -81,11 +81,11 @@ while robot.step(timeStep) != -1:
         r = colorSensor.imageGetRed(image, 1, 0, 0)
         g = colorSensor.imageGetGreen(image, 1, 0, 0)
         b = colorSensor.imageGetBlue(image, 1, 0, 0)
-        if (r >= 24) or (g >= 44) or (b >= 49):
+        if (r <= 221) or (g <= 179) or (b <= 104):
             print("Entramos en la arena")
             estado = 2
             print("r: " + str(r) + " g: " + str(g) + " b: " + str(b))
-        elif (r <= 19) and (g <= 34) and (b <= 34):
+        if (r <= 42) and (g <= 42) and (b <= 42):
             print("Casi caemos al pozo!")
             avanzar(0)
         else:

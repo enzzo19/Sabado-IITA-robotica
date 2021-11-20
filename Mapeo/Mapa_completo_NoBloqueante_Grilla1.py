@@ -119,17 +119,46 @@ while robot.step(timeStep) != -1:
             estado = 1
 # Etapa 1
     elif estado == 1:
-    #GIRO 2: Gira 90 grados y avanza hasta el fondo del mapa
+    # GIRO 2: Gira 90 grados y avanza hasta el fondo del mapa
         print("Inicio etapa 1")
         if MovimientoPa(90,0,0,6) == True:
             estado = 2
 
 # Etapa 2
     elif estado == 2:
-    #GIRO 3: Gira y avanza hasta la zona del pozo
+    # GIRO 3: Gira y avanza hasta la zona del pozo
         print("Inicio etapa 2")
         if MovimientoPa(270,0,0,6):
-            estado = 2
+            estado = 3
+    
+# Etapa 3
+    elif estado == 3:
+    # GIRO 4: Gira y avanza un poco, subiendo (que en realidad es bajando) por y hasta que llega a la última curva
+        print("Inicio etapa 3")
+        if MovimientoPa(270,0,0,6):
+            estado = 4
+
+# Etapa 4
+    elif estado == 4:
+    # GIRO 5: Gira y avanza a la izquierda para llegar al último tramo
+        print("Inicio etapa 4")
+        if MovimientoPa(270,0,0,6):
+            estado = 5
+# Etapa 5
+    elif estado == 5:
+    # GIRO 6: Gira y avanza hacia arriba por "y" para acomodarse en el último giro al pozo
+        print("Inicio etapa 5")
+        if MovimientoPa(90,0,0,6):
+            estado = 6
+# Etapa 6
+    elif estado == 6:
+    # GIRO 7: Llega al pozo. Gira y avanza, luego cae.
+        print("Inicio etapa 6")
+        if MovimientoPa(90,0,0,6):
+            estado = 7
+    
+    elif estado == 7:
+        print("Terminamos, pa")
 
     # #GIRO 4: Gira y avanza un poco, subiendo (que en realidad es bajando) por y hasta que llega a la última curva
     # print("Inicio etapa 4")
