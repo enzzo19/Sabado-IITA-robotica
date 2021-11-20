@@ -98,30 +98,45 @@ def MovimientoPa(angle,x0,y0,vel):
 # Code here
 estado = 0
 avanzar(0)
-while robot.step(timeStep) != -1:
+grado = gyro.getValues()[0] * 180 / math.pi
+print(f"Encoder incial: {grado}")
+print(robot.getTime())
+while True:
+    # avanzar(6.28)
+    # grado = gyro.getValues()[1] * 180 / math.pi
+    # print(f"Encoder en while: {grado}")
+    print(robot.getTime())
+    # if robot.getTime() >= 1:
+    #    break
+# avanzar(0)
+"""
     # Calculo los valores de X e Y
     x = gps.getValues()[0] - startX
     y = gps.getValues()[2] - startY
     #print("x:",round(x,1), "// y:",round(y,1))
+    MovimientoPa(90,0.14,0,6)
+    MovimientoPa(270,0.14,0,6)
+        
+        
 # Etapa 0
     if estado == 0:
         # Etapa inicial: Gira 90 grados y avanza hasta la pared
         print("Inicio etapa 0")
-        if MovimientoPa(90,0.14,0,6,90) == True:
+        if MovimientoPa(90,0.14,0,6):
             estado = 1
-"""# Etapa 1
+# Etapa 1
     elif estado == 1:
     #GIRO 2: Gira 90 grados y avanza hasta el fondo del mapa
         print("Inicio etapa 1")
-        if MovimientoPa(90,0.14,0,6,90) == True:
-            estado = 2"""
+        if MovimientoPa(180,0,0,6):
+            estado = 2
 
-"""# Etapa 2
+# Etapa 2
     elif estado == 2:
     #GIRO 3: Gira y avanza hasta la zona del pozo
         print("Inicio etapa 2")
-        if MovimientoPa(180,0.7,0.2,6):
-            estado = 2"""
+        if MovimientoPa(0,0,0,6):
+            estado = 2
 
     # #GIRO 4: Gira y avanza un poco, subiendo (que en realidad es bajando) por y hasta que llega a la última curva
     # print("Inicio etapa 4")
@@ -138,3 +153,5 @@ while robot.step(timeStep) != -1:
     # #GIRO 7: Llega al pozo. Gira y avanza, luego cae.
     # print("Inicio etapa 7")
     # MovimientoPa(90,2.7,4.2,-2.8,-1.3,6)
+
+"""
