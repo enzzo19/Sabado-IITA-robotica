@@ -6,6 +6,7 @@ import numpy as np
 import cv2 as cv
 from controller import Robot, DistanceSensor, GPS, Camera
 import random
+import time
 
 robot = Robot() # Create robot object
 timeStep = 32   # timeStep = numero de milisegundos entre actualizaciones mundiales (del mundo)
@@ -14,7 +15,6 @@ angulo_actual = 0
 tiempo_anterior = 0
 media_baldoza = 0.06
 speed = 6.28
-img = cv.imread(r"Imagenes\TestVictimS.png")
 global start
 # Distance sensor initialization
 distancia_sensor1 = robot.getDevice("distance sensor1")
@@ -28,10 +28,12 @@ ruedaIzquierda.setPosition(float('inf'))
 ruedaDerecha.setPosition(float('inf'))
 
 # Camera initialization
-camera2 = robot.getDevice("camera2")
-camera2.enable(timeStep)
-camera3 = robot.getDevice("camera3")
-camera3.enable(timeStep)
+camera_centro = robot.getDevice('camera1')
+camera_centro.enable(timeStep)
+camera_der = robot.getDevice("camera2")
+camera_der.enable(timeStep)
+camera_izq = robot.getDevice("camera3")
+camera_izq.enable(timeStep)
 
 # Gyroscope initialization
 gyro = robot.getDevice("gyro")
@@ -83,7 +85,9 @@ def rotar(angulo):
     print("Rotacion finalizada.")
     angulo_actual = 0
     return True
-    
+
+
+"""   
 def classifyVictim(img):
     img = cv.resize(img, (100, 100))
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -127,17 +131,28 @@ def classifyVictim(img):
             finalLetter = letterKey
             break
     return finalLetter
+"""
 
-    #cv.imshow("gray", gray)
-    #cv.imshow("thresh1", thresh1)
-    #cv.imshow("letter", letter)
-    #cv.imshow("lettercolor", letterColor)
-    #cv.imshow("top", images["top"])
-    #cv.imshow("middle", images["middle"])
-    #cv.imshow("bottom", images["bottom"])
+def detectVisualSimple(image_data, camera):
+    
+	coords_list = []
+	img = np.array(np.frombuffer(image_data, np.uint8).reshape((camera.getHeight(), camera.getWidth(), 4)))
+	img[:,:,2] = np.zeros([img.shape[0], img.shape[1]])
 
-    print(classifyVictim(img))
-    cv.waitKey(10000)
+
+	#convert from BGR to HSV color space
+	gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+	#apply threshold
+	thresh = cv.threshold(gray, 140, 255, cv.THRESH_BINARY)[1]
+
+	# draw all contours in green and accepted ones in red
+	contours, h = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+	
+	for c in contours:
+		if cv.contourArea(c) > 1000:
+			coords = list(c[0][0])
+			coords_list.append(coords)
+			return ((int(coords[0])),int(coords[1]))
 
 estado = 4
 while robot.step(timeStep) != -1:
@@ -168,7 +183,8 @@ while robot.step(timeStep) != -1:
         if robot.getTime() >= start + 0.55:
             print(start)
             print(robot.getTime())
-            estado = 3  
+            estado = 3
+            time.sleep(3)
     
     if estado == 2:
         print("estado 2")
@@ -178,6 +194,11 @@ while robot.step(timeStep) != -1:
             estado = 1
         if distancia_sensor1.getValue() > media_baldoza:  # Lee los valores del sensor de distancia
             avanzar(2) # Si no encuentra nada a una distancia de 0.06, avanza
+            img_der = camera_der.getImage()
+            img_izq = camera_izq.getImage()
+            if detectVisualSimple(img_izq, camera_izq) != None :
+                print("Lo encontramos")
+                estado = 5
         else:
             avanzar(0) # Sino, frena y cambia de estado
             estado = 3
@@ -202,11 +223,18 @@ while robot.step(timeStep) != -1:
             start = robot.getTime()
             estado = 1
         if distancia_sensor1.getValue() > media_baldoza: # Lee los valores del sensor de distancia
-            avanzar(6) # Si no encuentra nada a una distancia de 0.06, avanza
+            avanzar(6)# Si no encuentra nada a una distancia de 0.06, avanza
+            img_der = camera_der.getImage()
+            img_izq = camera_izq.getImage()
+            if detectVisualSimple(img_izq, camera_izq) != None or detectVisualSimple(img_der, camera_der) != None:
+                print("Encontramos Victima")
+                estado = 5
+                
         else:
             avanzar(0) # Sino, frena y cambia de estado
             estado = 3
             print("Paso al estado:",estado)
-        
-        if estado == 5:
-            classifyVictim(cv.imread(r"Imagenes\TestVictimS.png"))
+
+    if estado == 5:
+        print('Estado 5')
+        avanzar(0)
