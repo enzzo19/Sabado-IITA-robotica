@@ -194,11 +194,6 @@ while robot.step(timeStep) != -1:
             estado = 1
         if distancia_sensor1.getValue() > media_baldoza:  # Lee los valores del sensor de distancia
             avanzar(2) # Si no encuentra nada a una distancia de 0.06, avanza
-            img_der = camera_der.getImage()
-            img_izq = camera_izq.getImage()
-            if detectVisualSimple(img_izq, camera_izq) != None :
-                print("Lo encontramos")
-                estado = 5
         else:
             avanzar(0) # Sino, frena y cambia de estado
             estado = 3
