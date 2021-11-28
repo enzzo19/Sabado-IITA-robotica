@@ -11,15 +11,12 @@ import time
 robot = Robot() # Create robot object
 timeStep = 32   # timeStep = numero de milisegundos entre actualizaciones mundiales (del mundo)
 tile_size = 0.12 # Tamaño de casilla
-start = robot.getTime()
 angulo_actual = 0
 tiempo_anterior = 0
 media_baldoza = 0.06
-speed = 6.28
-speed_pozo_arena = 2
-una_baldoza_tiempo = start + 1
-media_baldoza_tiempo = start + 0.55
-cuarto_baldoza_tiempo = start + 0.55
+speed = 2
+speedGral = 6.28
+global start
 # Distance sensor initialization
 distancia_sensor1 = robot.getDevice("distance sensor1")
 distancia_sensor1.enable(timeStep)
@@ -89,7 +86,7 @@ def rotar(angulo):
     print("Rotacion finalizada.")
     angulo_actual = 0
     return True
-
+"""   
 def classifyVictim(img):
     img = cv.resize(img, (100, 100))
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -133,6 +130,7 @@ def classifyVictim(img):
             finalLetter = letterKey
             break
     return finalLetter
+"""
 
 def detectVisualSimple(image_data, camera):
     
@@ -157,6 +155,7 @@ def detectVisualSimple(image_data, camera):
 
 estado = 4
 while robot.step(timeStep) != -1:
+    #print("velocidad actual: ",speedGral)
     image = colorSensor.getImage()
     r = colorSensor.imageGetRed(image, 1, 0, 0)
     g = colorSensor.imageGetGreen(image, 1, 0, 0)
@@ -166,10 +165,15 @@ while robot.step(timeStep) != -1:
         print("Entramos en la arena")
         estado = 2
         print("r: " + str(r) + " g: " + str(g) + " b: " + str(b))
-    if r < 150:
+    if 149 < r < 152 and 250 < g < 251 and 250 < b < 251:
+        print("Estamos en checkpoint!")
+    if r < 148:
         print("Pozo")
-        start
-        estado = 6
+        start = robot.getTime()
+        estado = 1
+    if r >= 230 and b >= 230 and g >= 230:
+        avanzar(speedGral) 
+        estado = 4
     
     if estado == 1:
         print("estado 1")
@@ -181,20 +185,24 @@ while robot.step(timeStep) != -1:
         # 1 para 1 rotacion completa que equivale a 1 baldosa si avanzas, o casi 270 grados girando
         # 0.36 para 90 grados
 
-        if robot.getTime() >= media_baldoza_tiempo:
+        if robot.getTime() >= start + 0.55:
             print(start)
             print(robot.getTime())
             estado = 3
-            time.sleep(3)
     
     if estado == 2:
         print("estado 2")
         if r < 150:
             print("Pozo")
-            start
-            estado = 6
+            start = robot.getTime()
+            estado = 1
         if distancia_sensor1.getValue() > media_baldoza:  # Lee los valores del sensor de distancia
             avanzar(2) # Si no encuentra nada a una distancia de 0.06, avanza
+            img_der = camera_der.getImage()
+            img_izq = camera_izq.getImage()
+            if detectVisualSimple(img_izq, camera_izq) != None :
+                print("Lo encontramos")
+                estado = 5
         else:
             avanzar(0) # Sino, frena y cambia de estado
             estado = 3
@@ -203,13 +211,13 @@ while robot.step(timeStep) != -1:
     # Estado 3
     if estado == 3:
         print("estado 3")
-        angule = random.choice([90])#, 270
+        angule = random.choice([270, 90])
         if rotar(angule) == True: # Como ya detectó algo en el estado 1, rota 90
             if distancia_sensor1.getValue() <= media_baldoza: # Lee si detecta algo.
                 print("Valores del sensor de distancia:",distancia_sensor1.getValue())
                 rotar(angule) # Si si, rota de vuelta
             else:
-                estado = 4 # Si no, vuelve al estado 1
+                estado = 4 # Si no, vuelve al estado 4
                 print("paso al estado:",estado)
 
     if estado == 4:
@@ -219,7 +227,7 @@ while robot.step(timeStep) != -1:
             start = robot.getTime()
             estado = 1
         if distancia_sensor1.getValue() > media_baldoza: # Lee los valores del sensor de distancia
-            avanzar(6)# Si no encuentra nada a una distancia de 0.06, avanza
+            avanzar(speedGral)# Si no encuentra nada a una distancia de 0.06, avanza
             img_der = camera_der.getImage()
             img_izq = camera_izq.getImage()
             if detectVisualSimple(img_izq, camera_izq) != None or detectVisualSimple(img_der, camera_der) != None:
@@ -234,21 +242,18 @@ while robot.step(timeStep) != -1:
     if estado == 5:
         print('Estado 5')
         avanzar(0)
-        classifyVictim()
-        estado = 4
-
+'''
     if estado == 6:
         print("estado 6")
 
-        ruedaIzquierda.setVelocity(-speed_pozo_arena)
-        ruedaDerecha.setVelocity(-speed_pozo_arena)
+        ruedaIzquierda.setVelocity(-speed)
+        ruedaDerecha.setVelocity(-speed)
 
         # Para girar 90 grados debes cambiar el 1 por 0.36.
         # 1 para 1 rotacion completa que equivale a 1 baldosa si avanzas, o casi 270 grados girando
         # 0.36 para 90 grados
 
-        if robot.getTime() >= media_baldoza_tiempo:
+        if robot.getTime() >= start + 0.55:
             print(start)
             print(robot.getTime())
-            estado = 3
-            time.sleep(3)
+            estado = 3'''

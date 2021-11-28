@@ -19,7 +19,7 @@ speed = 6.28
 speed_pozo_arena = 2
 una_baldoza_tiempo = start + 1
 media_baldoza_tiempo = start + 0.55
-cuarto_baldoza_tiempo = start + 0.55
+cuarto_baldoza_tiempo = start + 0.825
 # Distance sensor initialization
 distancia_sensor1 = robot.getDevice("distance sensor1")
 distancia_sensor1.enable(timeStep)
@@ -191,8 +191,8 @@ while robot.step(timeStep) != -1:
         print("estado 2")
         if r < 150:
             print("Pozo")
-            start
-            estado = 6
+            start = robot.getTime()
+            estado = 1
         if distancia_sensor1.getValue() > media_baldoza:  # Lee los valores del sensor de distancia
             avanzar(2) # Si no encuentra nada a una distancia de 0.06, avanza
         else:
@@ -203,7 +203,7 @@ while robot.step(timeStep) != -1:
     # Estado 3
     if estado == 3:
         print("estado 3")
-        angule = random.choice([90])#, 270
+        angule = random.choice([90, 270])
         if rotar(angule) == True: # Como ya detectó algo en el estado 1, rota 90
             if distancia_sensor1.getValue() <= media_baldoza: # Lee si detecta algo.
                 print("Valores del sensor de distancia:",distancia_sensor1.getValue())
@@ -238,16 +238,10 @@ while robot.step(timeStep) != -1:
         estado = 4
 
     if estado == 6:
-        print("estado 6")
-
         ruedaIzquierda.setVelocity(-speed_pozo_arena)
         ruedaDerecha.setVelocity(-speed_pozo_arena)
 
-        # Para girar 90 grados debes cambiar el 1 por 0.36.
-        # 1 para 1 rotacion completa que equivale a 1 baldosa si avanzas, o casi 270 grados girando
-        # 0.36 para 90 grados
-
-        if robot.getTime() >= media_baldoza_tiempo:
+        if robot.getTime() >= cuarto_baldoza_tiempo:
             print(start)
             print(robot.getTime())
             estado = 3
