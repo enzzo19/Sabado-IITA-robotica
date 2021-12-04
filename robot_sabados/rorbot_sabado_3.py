@@ -85,28 +85,36 @@ def rotar(angulo):
     print("Rotacion finalizada.")
     angulo_actual = 0
     return True
-  
+
+
 def classifyVictim(img):
+    cv.imshow("imagen normal", img)
     img = cv.resize(img, (100, 100))
+    cv.imshow("imagen redimensionada", img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    cv.imshow("imagen escala grises", gray)
     thresh1 = cv.threshold(gray, 100, 255, cv.THRESH_BINARY_INV)[1]
+    cv.imshow("imagen tresh", thresh1)
     conts, h = cv.findContours(thresh1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    x, y, w, h = cv.boundingRect(conts[0])
+    x, y, w, h = cv.boundingRect(conts[1])
+    print(thresh1.shape[0])
+    cv.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), thickness=1)
+    cv.imshow("Rectangle", img)
     letter = thresh1[y:y + h, x:x + w]
     letter = cv.resize(letter, (100, 100), interpolation=cv.INTER_AREA)
     #letterColor = cv.cvtColor(letter, cv.COLOR_GRAY2BGR)
     areaWidth = 20
     areaHeight = 30
     areas = {
-        "top": ((0, areaHeight),(50 - areaWidth // 2, 50 + areaWidth // 2)),
+        "top": ((0, areaHeight), (50 - areaWidth // 2, 50 + areaWidth // 2)),
         "middle": ((50 - areaHeight // 2, 50 + areaHeight // 2), (50 - areaWidth // 2, 50 + areaWidth // 2)),
-        "bottom": ((100 - areaHeight, 100), (50 - areaWidth // 2, 50 + areaWidth // 2 ))
-        }
+        "bottom": ((100 - areaHeight, 100), (50 - areaWidth // 2, 50 + areaWidth // 2))
+    }
     images = {
         "top": letter[areas["top"][0][0]:areas["top"][0][1], areas["top"][1][0]:areas["top"][1][1]],
         "middle": letter[areas["middle"][0][0]:areas["middle"][0][1], areas["middle"][1][0]:areas["middle"][1][1]],
         "bottom": letter[areas["bottom"][0][0]:areas["bottom"][0][1], areas["bottom"][1][0]:areas["bottom"][1][1]]
-        }
+    }
     #cv.rectangle(letterColor,(areas["top"][1][0], areas["top"][0][0]), (areas["top"][1][1], areas["top"][0][1]), (0, 255, 0), 1)
     #cv.rectangle(letterColor, (areas["middle"][1][0], areas["middle"][0][0]), (areas["middle"][1][1], areas["middle"][0][1]), (0, 0, 255), 1)
     #cv.rectangle(letterColor,(areas["bottom"][1][0], areas["bottom"][0][0]), (areas["bottom"][1][1], areas["bottom"][0][1]), (225, 0, 255), 1)
@@ -120,10 +128,10 @@ def classifyVictim(img):
                     count += 1
         counts[key] = count > acceptanceThreshold
     letters = {
-        "H":{'top': False, 'middle': True, 'bottom': False},
-        "S":{'top': True, 'middle': True, 'bottom': True},
-        "U":{'top': False, 'middle': False, 'bottom': True}
-        }
+        "H": {'top': False, 'middle': True, 'bottom': False},
+        "S": {'top': True, 'middle': True, 'bottom': True},
+        "U": {'top': False, 'middle': False, 'bottom': True}
+    }
     for letterKey in letters.keys():
         if counts == letters[letterKey]:
             finalLetter = letterKey
@@ -219,7 +227,7 @@ while robot.step(timeStep) != -1:
             if deteccion_centro == None: 
                 rotar(angule) 
             else:
-                estado = 'reconocimiento victimas' 
+                estado = 'clasificacion' 
 
     if estado == 'avanzar_libre':
         print("estado avanzar_libre")
@@ -243,7 +251,7 @@ while robot.step(timeStep) != -1:
 
 
     if estado == 'deteccion':
-        print("Estado deteccion")
+        print('Estado deteccion')
         avanzar(0.1)
         img_der = camera_der.getImage()
         img_izq = camera_izq.getImage()
@@ -251,15 +259,9 @@ while robot.step(timeStep) != -1:
         deteccion_der = detectVisualSimple(img_der, camera_der)
         print(f'{deteccion_izq}, {deteccion_der}')
         if deteccion_izq[0] < 20:
-            avanzar(0)
             estado = 'girito_victima'
             
-    if estado == 'frenar':
-        print("Estado frenar")
+    if estado == 'clasificacion':
+        print("Estado clasificacion")
         avanzar(0)
-
-    if estado == 'reconocimiento victimas':
-        print("Estado de reconocimiento de victimas")
-        avanzar(0)
-        classifyVictim()
-        print("Letra: ", classifyVictim)
+        

@@ -1,15 +1,21 @@
 import numpy as np
 import cv2 as cv
 
-img = cv.imread(r"Imagenes\TestVictimS.png")
-
+img = cv.imread(r"Imagenes/imagenes_H/H_13.png")
 
 def classifyVictim(img):
+    cv.imshow("imagen normal", img)
     img = cv.resize(img, (100, 100))
+    cv.imshow("imagen redimensionada", img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    cv.imshow("imagen escala grises", gray)
     thresh1 = cv.threshold(gray, 100, 255, cv.THRESH_BINARY_INV)[1]
+    cv.imshow("imagen tresh", thresh1)
     conts, h = cv.findContours(thresh1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    x, y, w, h = cv.boundingRect(conts[0])
+    x, y, w, h = cv.boundingRect(conts[1])
+    print(thresh1.shape[0])
+    cv.rectangle(img, (x, y), (x + w, y + h ), (0, 0, 255), thickness=1)
+    cv.imshow("Rectangle", img)
     letter = thresh1[y:y + h, x:x + w]
     letter = cv.resize(letter, (100, 100), interpolation=cv.INTER_AREA)
     #letterColor = cv.cvtColor(letter, cv.COLOR_GRAY2BGR)
@@ -57,4 +63,4 @@ def classifyVictim(img):
 #cv.imshow("bottom", images["bottom"])
 
 print(classifyVictim(img))
-cv.waitKey(10000)
+cv.waitKey(0)
