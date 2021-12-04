@@ -265,9 +265,9 @@ while robot.step(timeStep) != -1:
         print("Estado clasificacion")
         avanzar(0)
         img = camera_centro.getImage()
+        img = np.array(np.frombuffer(img, np.uint8).reshape((camera_centro.getHeight(), camera_centro.getWidth(), 4)))
         print("******************************")
         print(classifyVictim(img))
-        time.sleep(3)
         print("******************************")
         
         
