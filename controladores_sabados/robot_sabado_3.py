@@ -7,6 +7,7 @@ import cv2 as cv
 from controller import Robot, DistanceSensor, GPS, Camera
 import random
 import time
+import struct
 
 robot = Robot() # Create robot object
 timeStep = 32   # timeStep = numero de milisegundos entre actualizaciones mundiales (del mundo)
@@ -52,7 +53,18 @@ y = 0
 # Color sensor initialization
 colorSensor = robot.getDevice("colour_sensor")
 colorSensor.enable(timeStep)
-
+# Util Class
+class Emitter:
+    def __init__(self, emmitter, coordsDivisor=0):
+        self.emitter = emmitter
+        self.divisor = coordsDivisor
+    # Sends a message given a position and identifier
+    def sendMessage(self,pos, identifier):
+        print("Sent message " + identifier + " with pos " + str((int(pos[0] / self.divisor * 100), int(pos[1] / self.divisor * 100))))
+        message = struct.pack('i i c', int(pos[0] / self.divisor * 100), int(pos[1] / self.divisor * 100), identifier.encode())
+        self.emitter.send(message)
+        
+# Util Functions
 def avanzar(vel):
     ruedaIzquierda.setVelocity(vel)
     ruedaDerecha.setVelocity(vel)
@@ -88,18 +100,18 @@ def rotar(angulo):
 
 
 def classifyVictim(img):
-    cv.imshow("imagen normal", img)
+    # cv.imshow("imagen normal", img)
     img = cv.resize(img, (100, 100))
-    cv.imshow("imagen redimensionada", img)
+    # cv.imshow("imagen redimensionada", img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    cv.imshow("imagen escala grises", gray)
+     #cv.imshow("imagen escala grises", gray)
     thresh1 = cv.threshold(gray, 100, 255, cv.THRESH_BINARY_INV)[1]
-    cv.imshow("imagen tresh", thresh1)
+    # cv.imshow("imagen tresh", thresh1)
     conts, h = cv.findContours(thresh1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     x, y, w, h = cv.boundingRect(conts[1])
-    print(thresh1.shape[0])
+    # print(thresh1.shape[0])
     cv.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), thickness=1)
-    cv.imshow("Rectangle", img)
+    # cv.imshow("Rectangle", img)
     letter = thresh1[y:y + h, x:x + w]
     letter = cv.resize(letter, (100, 100), interpolation=cv.INTER_AREA)
     #letterColor = cv.cvtColor(letter, cv.COLOR_GRAY2BGR)
@@ -128,9 +140,9 @@ def classifyVictim(img):
                     count += 1
         counts[key] = count > acceptanceThreshold
     letters = {
-        "H": {'top': False, 'middle': True, 'bottom': False},
-        "S": {'top': True, 'middle': True, 'bottom': True},
-        "U": {'top': False, 'middle': False, 'bottom': True}
+        "Victim: H": {'top': False, 'middle': True, 'bottom': False},
+        "Victim: S": {'top': True, 'middle': True, 'bottom': True},
+        "Victim: U": {'top': False, 'middle': False, 'bottom': True}
     }
     for letterKey in letters.keys():
         if counts == letters[letterKey]:
@@ -227,6 +239,7 @@ while robot.step(timeStep) != -1:
             if deteccion_centro == None: 
                 rotar(angule) 
             else:
+                start = robot.getTime()
                 estado = 'clasificacion' 
 
     if estado == 'avanzar_libre':
@@ -260,14 +273,24 @@ while robot.step(timeStep) != -1:
         print(f'{deteccion_izq}, {deteccion_der}')
         if deteccion_izq[0] < 20:
             estado = 'girito_victima'
-            
+    a = 0
     if estado == 'clasificacion':
-        print("Estado clasificacion")
         avanzar(0)
-        img = camera_centro.getImage()
-        img = np.array(np.frombuffer(img, np.uint8).reshape((camera_centro.getHeight(), camera_centro.getWidth(), 4)))
-        print("******************************")
-        print(classifyVictim(img))
-        print("******************************")
+        if robot.getTime() >= start + 1:
+            if a == 0:
+                # emitter =  Emitter(robot.getEmitter("emitter"), robot.posMultiplier)
+                pos = [gps.getValues()[0], gps.getValues()[1]]
+                print(pos)
+                img = camera_centro.getImage()
+                img = np.array(np.frombuffer(img, np.uint8).reshape((camera_centro.getHeight(), camera_centro.getWidth(), 4)))
+                identifier = classifyVictim(img)
+                # print("Sent message " + identifier + " with pos " + str((int(pos[0] / emitter.divisor * 100), int(pos[1] / robot.divisor * 100))))
+                # message = struct.pack('i i c', int(pos[0] / emitter.divisor * 100), int(pos[1] / emitter.divisor * 100), identifier.encode())
+                # emitter.emitter.send(message)
+                a = 1
+        if robot.getTime() >= start + 3:
+            estado = 'girito'
+            
+                
         
         
