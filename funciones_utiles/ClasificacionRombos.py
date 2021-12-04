@@ -1,5 +1,5 @@
 import cv2 as cv
-from ReadDigits import Read_Digit
+from funciones_utiles.ReadDigits import Read_Digit
 def clasif_rombos(numero):
     if numero == "2":
         valor = "F"

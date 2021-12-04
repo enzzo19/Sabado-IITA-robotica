@@ -264,4 +264,10 @@ while robot.step(timeStep) != -1:
     if estado == 'clasificacion':
         print("Estado clasificacion")
         avanzar(0)
+        img = camera_centro.getImage()
+        print("******************************")
+        print(classifyVictim(img))
+        time.sleep(3)
+        print("******************************")
+        
         
