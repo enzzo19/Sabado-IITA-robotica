@@ -271,7 +271,7 @@ while robot.step(timeStep) != -1:
         deteccion_izq = detectVisualSimple(img_izq, camera_izq)
         deteccion_der = detectVisualSimple(img_der, camera_der)
         print(f'{deteccion_izq}, {deteccion_der}')
-        if deteccion_izq[0] < 20:
+        if deteccion_izq[0] < 45:
             estado = 'girito_victima'
     a = 0
     if estado == 'clasificacion':
@@ -290,7 +290,3 @@ while robot.step(timeStep) != -1:
                 a = 1
         if robot.getTime() >= start + 3:
             estado = 'girito'
-            
-                
-        
-        
