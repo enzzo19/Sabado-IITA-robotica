@@ -1,5 +1,5 @@
 import cv2 as cv
-from funciones_utiles.ReadDigits import Read_Digit
+from ReadDigits import Read_Digit
 def clasif_rombos(numero):
     if numero == "2":
         valor = "F"
@@ -23,7 +23,7 @@ def Reconocimiento_Carteles_Rombos(imagen):
 
     valor = Read_Digit(cropped)
     #print(clasif_rombos(valor.strip()))
-    print(valor)
+    # print(valor)
     return clasif_rombos(valor.strip())
     # img_rgb = cv.cvtColor(cropped, cv.COLOR_BGR2RGB)
     # print(pytesseract.image_to_string(img_rgb))
