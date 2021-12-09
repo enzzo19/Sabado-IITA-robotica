@@ -327,11 +327,22 @@ while robot.step(timeStep) != -1:
         deteccion_izq = detectVisualSimple(img_izq, camera_izq)
         deteccion_der = detectVisualSimple(img_der, camera_der)
         print(f'{deteccion_izq}, {deteccion_der}')
-        if deteccion_izq[0] < 20:
-            estado = 'girito_victima'
-            print("CAMBIO AL ESTADO girito_victima")
-        else:
-            print(f'{deteccion_izq}, {deteccion_der}')
+        try: 
+            if deteccion_izq[0] < 20:
+                estado = 'girito_victima'
+                print("CAMBIO AL ESTADO girito_victima")
+            else:
+                print(f'{deteccion_izq}, {deteccion_der}')
+        except:
+            pass
+        try:
+            if deteccion_der[0] < 20:
+                estado = 'girito_victima'
+                print("CAMBIO AL ESTADO girito_victima")
+            else:
+                print(f'{deteccion_izq}, {deteccion_der}')
+        except:
+            pass   
     
     # ESTADO CLASIFICACIÓN DE VÍCTIMA
     if estado == 'clasificacion':

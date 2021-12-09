@@ -29,4 +29,5 @@ def Reconocimiento_Carteles_Rombos(imagen):
     # print(pytesseract.image_to_string(img_rgb))
    
     
-Reconocimiento_Carteles_Rombos(r"Imagenes\placard-2-flammable-gas.png")
+Reconocimiento_Carteles_Rombos(
+    r"Imagenes\imagenes rombo\imagenes_rombo_peroxido\rombo_peroxido_1.png")
