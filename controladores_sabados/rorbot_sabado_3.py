@@ -269,5 +269,3 @@ while robot.step(timeStep) != -1:
         print("******************************")
         print(classifyVictim(img))
         print("******************************")
-        
-        
