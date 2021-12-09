@@ -4,9 +4,10 @@ from controller import Motor
 from controller import PositionSensor
 import numpy as np
 import cv2 as cv
-from controller import Robot, DistanceSensor, GPS, Camera
+from controller import Robot, DistanceSensor, GPS, Camera, Receiver, Emitter
 import random
 import time
+import struct
 
 robot = Robot() # Create robot object
 timeStep = 32   # timeStep = numero de milisegundos entre actualizaciones mundiales (del mundo)
@@ -15,7 +16,17 @@ angulo_actual = 0
 tiempo_anterior = 0
 media_baldoza = 0.06
 speed = 6.28
+margen = 2
+x = 0
+y = 0
+
 global start
+global finalLetter
+global valor_y
+global valor_x
+
+lista_victim = []
+
 # Distance sensor initialization
 distancia_sensor1 = robot.getDevice("distance sensor1")
 distancia_sensor1.enable(timeStep)
@@ -46,13 +57,26 @@ robot.step(timeStep) # Actualizo los valores de los sensores
 startX = gps.getValues()[0] # Cargo La posicion inicial
 startY = gps.getValues()[2]
 offset_xy = [0, 2]
-x = 0
-y = 0
+
 
 # Color sensor initialization
 colorSensor = robot.getDevice("colour_sensor")
 colorSensor.enable(timeStep)
 
+# Emitter and Receiver initialization
+receiver = robot.getDevice("receiver") # Retrieve the receiver and emitter by device name
+emitter = robot.getDevice("emitter")
+receiver.enable(timeStep)
+
+
+# Message Sending
+def SendMessage(posx, posy, identifier):
+    victimType = bytes("H","utf-8")
+    message = struct.pack("i i c", posx * 100, posy * 100, victimType)
+    print("I have just sent the message")
+    emitter.send(message)
+
+# Util Functions
 def avanzar(vel):
     ruedaIzquierda.setVelocity(vel)
     ruedaDerecha.setVelocity(vel)
@@ -86,20 +110,44 @@ def rotar(angulo):
     angulo_actual = 0
     return True
 
+def rotar_b(angulo):
+    global angulo_actual
+    tiempo_anterior = 0
+    #  iniciar_rotacion
+    girar(0.5)
+    # Mientras no llego al angulo solicitado sigo girando
+    while (abs(angulo - angulo_actual) > 1):
+        tiempo_actual = robot.getTime()
+        # print("Inicio rotacion angulo", angulo, "Angulo actual:",angulo_actual)
+        tiempo_transcurrido = tiempo_actual - tiempo_anterior  # tiempo que paso en cada timestep
+        radsIntimestep = abs(gyro.getValues()[1]) * tiempo_transcurrido   # rad/seg * mseg * 1000
+        degsIntimestep = radsIntimestep * 180 / math.pi
+        # print("rads: " + str(radsIntimestep) + " | degs: " + str(degsIntimestep))
+        angulo_actual += degsIntimestep
+        # Si se pasa de 360 grados se ajusta la rotacion empezando desde 0 grados
+        angulo_actual = angulo_actual % 360
+        # Si es mas bajo que 0 grados, le resta ese valor a 360
+        if angulo_actual < 0:
+            angulo_actual += 360
+        tiempo_anterior = tiempo_actual
+        robot.step(timeStep)
+    # angulo_actual = 0
+    return True
 
 def classifyVictim(img):
-    cv.imshow("imagen normal", img)
+    finalLetter = ' '
+    # cv.imshow("imagen normal", img)
     img = cv.resize(img, (100, 100))
-    cv.imshow("imagen redimensionada", img)
+    # cv.imshow("imagen redimensionada", img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    cv.imshow("imagen escala grises", gray)
+     #cv.imshow("imagen escala grises", gray)
     thresh1 = cv.threshold(gray, 100, 255, cv.THRESH_BINARY_INV)[1]
-    cv.imshow("imagen tresh", thresh1)
+    # cv.imshow("imagen tresh", thresh1)
     conts, h = cv.findContours(thresh1, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     x, y, w, h = cv.boundingRect(conts[1])
-    print(thresh1.shape[0])
+    # print(thresh1.shape[0])
     cv.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), thickness=1)
-    cv.imshow("Rectangle", img)
+    # cv.imshow("Rectangle", img)
     letter = thresh1[y:y + h, x:x + w]
     letter = cv.resize(letter, (100, 100), interpolation=cv.INTER_AREA)
     #letterColor = cv.cvtColor(letter, cv.COLOR_GRAY2BGR)
@@ -139,74 +187,96 @@ def classifyVictim(img):
     return finalLetter
 
 def detectVisualSimple(image_data, camera):
-    
 	coords_list = []
 	img = np.array(np.frombuffer(image_data, np.uint8).reshape((camera.getHeight(), camera.getWidth(), 4)))
 	img[:,:,2] = np.zeros([img.shape[0], img.shape[1]])
-
-
 	#convert from BGR to HSV color space
 	gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 	#apply threshold
 	thresh = cv.threshold(gray, 140, 255, cv.THRESH_BINARY)[1]
-
 	# draw all contours in green and accepted ones in red
 	contours, h = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-	
 	for c in contours:
 		if cv.contourArea(c) > 1000:
 			coords = list(c[0][0])
 			coords_list.append(coords)
 			return ((int(coords[0])),int(coords[1]))
 
+def type_floor():
+    image = colorSensor.getImage()
+    r = colorSensor.imageGetRed(image, 1, 0, 0)
+    g = colorSensor.imageGetGreen(image, 1, 0, 0)
+    b = colorSensor.imageGetBlue(image, 1, 0, 0)
+    # print("r: " + str(r) + " g: " + str(g) + " b: " + str(b))
+    if r >= 150 and r <= 119 :
+        # print("Entramos en la arena")
+        return 'arena'
+        # print("r: " + str(r) + " g: " + str(g) + " b: " + str(b))
+    if r <= 148:
+        return 'pozo'
+    if r > 148 and r < 150:
+        return 'checkpoint'
+    if r <= 220:
+        return 'common'
+
+def speeds_per_floor(floor,speed):
+    if floor in ['arena', 'pozo']:
+        ruedaIzquierda.setVelocity(speed*0.3)
+        ruedaDerecha.setVelocity(speed*0.3)
+    if floor in ['common', 'checkpoint']:
+        ruedaIzquierda.setVelocity(speed)
+        ruedaDerecha.setVelocity(speed)
+
+# Main Code
 estado = 'avanzar_libre'
 while robot.step(timeStep) != -1:
     image = colorSensor.getImage()
     r = colorSensor.imageGetRed(image, 1, 0, 0)
     g = colorSensor.imageGetGreen(image, 1, 0, 0)
     b = colorSensor.imageGetBlue(image, 1, 0, 0)
-    # print("r: " + str(r) + " g: " + str(g) + " b: " + str(b))
-    if r < 220 and r > 150 and estado != 'retroceso' and estado != 'girito':
-        # print("Entramos en la arena")
+    floor = type_floor()
+    print('Floor:',floor)
+    if floor == 'arena' and estado != 'retroceso' and estado != 'girito':
         estado = 'arena'
-        # print("r: " + str(r) + " g: " + str(g) + " b: " + str(b))
-    if r < 150:
-        # print("Pozo")
+
+    if floor == 'pozo' and estado != 'girito_victima':
         start = robot.getTime()
         estado = 'retroceso'
     
-    if estado == 'retroceso':
-        print("estado retroceso")
-
-        ruedaIzquierda.setVelocity(-speed)
-        ruedaDerecha.setVelocity(-speed)
-
-        # Para girar 90 grados debes cambiar el 1 por 0.36.
-        # 1 para 1 rotacion completa que equivale a 1 baldosa si avanzas, o casi 270 grados girando
-        # 0.36 para 90 grados
-
-        if robot.getTime() >= start + 0.55:
-            # print(start)
-            # print(robot.getTime())
-            estado = 'girito'
-    
+    # ESTADO ARENA
     if estado == 'arena':
         print("estado arena")
-        if r < 150:
+        if floor == 'pozo':
             # print("Pozo")
             start = robot.getTime()
             estado = 'retroceso'
-        if r > 220:
+        if floor == 'common':
             # print('baldoza comun')
-            estado = 'avanzar_libre'
+            start = robot.getTime()
+            estado = 'avanzar_libre'    
         if distancia_sensor1.getValue() > media_baldoza:  # Lee los valores del sensor de distancia
-            avanzar(2) # Si no encuentra nada a una distancia de 0.06, avanza
+            speeds_per_floor(floor,speed) # Si no encuentra nada a una distancia de 0.06, avanza
+            img_der = camera_der.getImage()
+            img_izq = camera_izq.getImage()
+            deteccion_izq = detectVisualSimple(img_izq, camera_izq)
+            deteccion_der = detectVisualSimple(img_der, camera_der)
+            if (deteccion_izq != None) or (deteccion_der != None):
+                estado = 'deteccion'
         else:
             avanzar(0) # Sino, frena y cambia de estado
             estado = 'girito'
             # print("Paso al estado:",estado)
 
-    # Estado 3
+    # ESTADO RETROCESO
+    if estado == 'retroceso':
+        print("estado retroceso")
+        speeds_per_floor(floor,-speed)
+        if robot.getTime() >= start + 0.55:
+            # print(start)
+            # print(robot.getTime())
+            estado = 'girito'
+
+    # ESTADO GIRITO
     if estado == 'girito':
         print("estado girito")
         angule = random.choice([90, 270])
@@ -217,42 +287,51 @@ while robot.step(timeStep) != -1:
             else:
                 estado = 'avanzar_libre' # Si no, vuelve al estado 1
                 # print("paso al estado:",estado)
-            
+    
+    # ESTADO GIRITO VICTIMA
     if estado == 'girito_victima':
         print("estado girito_victima")
         img_centro = camera_centro.getImage()
         deteccion_centro = detectVisualSimple(img_centro, camera_centro)
-        if rotar(270) == True: 
+        if rotar(270) == True:
             print(deteccion_centro)
-            if deteccion_centro == None: 
+            if deteccion_centro == None:
+                angule = random.choice([90, 270])
                 rotar(angule) 
             else:
+                a = 0
+                start = robot.getTime()
                 estado = 'clasificacion' 
 
+    # ESTADO AVANZAR LIBRE
     if estado == 'avanzar_libre':
         print("estado avanzar_libre")
-        if r < 150:
-            # print("Pozo")
-            start = robot.getTime()
-            estado = 'retroceso'
-        
+            
         if distancia_sensor1.getValue() > media_baldoza: # Lee los valores del sensor de distancia
-            avanzar(6)# Si no encuentra nada a una distancia de 0.06, avanza
+            start = robot.getTime()
+            if robot.getTime() <= start + 1:
+                speeds_per_floor('arena', speed)
+                # print("ESTOY ESPERANDO")
+            else:
+                speeds_per_floor(floor, speed)
             img_der = camera_der.getImage()
             img_izq = camera_izq.getImage()
             deteccion_izq = detectVisualSimple(img_izq, camera_izq)
             deteccion_der = detectVisualSimple(img_der, camera_der)
-            if deteccion_izq != None   or deteccion_der != None:
-                estado = 'deteccion' 
+            x = gps.getValues()[0]
+            y = gps.getValues()[2]
+            if (deteccion_izq != None) or (deteccion_der != None) and [x,y] not in lista_victim:
+                estado = 'deteccion'
+
         else:
             avanzar(0) # Sino, frena y cambia de estado
             estado = 'girito'
             # print("Paso al estado:",estado)
 
-
+    # ESTADO DETECCIÓN DE VÍCTIMA
     if estado == 'deteccion':
         print('Estado deteccion')
-        avanzar(0.1)
+        avanzar(0.3)
         img_der = camera_der.getImage()
         img_izq = camera_izq.getImage()
         deteccion_izq = detectVisualSimple(img_izq, camera_izq)
@@ -260,12 +339,32 @@ while robot.step(timeStep) != -1:
         print(f'{deteccion_izq}, {deteccion_der}')
         if deteccion_izq[0] < 20:
             estado = 'girito_victima'
-            
+            print("CAMBIO AL ESTADO girito_victima")
+        else:
+            print(f'{deteccion_izq}, {deteccion_der}')
+    
+    # ESTADO CLASIFICACIÓN DE VÍCTIMA
     if estado == 'clasificacion':
         print("Estado clasificacion")
         avanzar(0)
-        img = camera_centro.getImage()
-        img = np.array(np.frombuffer(img, np.uint8).reshape((camera_centro.getHeight(), camera_centro.getWidth(), 4)))
-        print("******************************")
-        print(classifyVictim(img))
-        print("******************************")
+        if robot.getTime() >= start + 1:
+            if a == 0:
+                # Robot catches cetre camera image and classifies it
+                img = camera_centro.getImage()
+                img = np.array(np.frombuffer(img, np.uint8).reshape((camera_centro.getHeight(), camera_centro.getWidth(), 4)))
+                identifier = classifyVictim(img)
+                print(identifier)
+                # Prints the message necessary to score points considering the GPS POSITION and the TYPE OF VICTIM
+                victimType = bytes(identifier, "utf-8") # The victim type being sent is the letter 'H' for harmed victim
+                send_time=robot.getTime() + 2
+                x = gps.getValues()[0]
+                y = gps.getValues()[2]
+                message = struct.pack("i i c", int(x*100) , int(y*100) , victimType)
+                emitter.send(message)
+                valor_x = margen >= x >= margen
+                valor_y = margen >= y >= margen
+                lista_victim.append([valor_x,valor_y])
+                print (lista_victim)
+                a = 1
+        if robot.getTime() >= start + 3:
+            estado = 'girito'
