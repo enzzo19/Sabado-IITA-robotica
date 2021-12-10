@@ -230,7 +230,7 @@ if all == True:
 
 # MAIN CODE
     while robot.step(timeStep) != -1:
-    # CONFIGURACIONES DEL SENSOR DE COLOR
+ # CONFIGURACIONES DEL SENSOR DE COLOR
         image = colorSensor.getImage()
         r = colorSensor.imageGetRed(image, 1, 0, 0)
         g = colorSensor.imageGetGreen(image, 1, 0, 0)
@@ -238,7 +238,7 @@ if all == True:
         floor = type_floor()
         print('Floor:',floor)
     
-    # FUNCIONES DEL PISO
+ # FUNCIONES DEL PISO
         if floor == 'arena' and estado != 'retroceso' and estado != 'girito':
             estado = 'arena'
 
@@ -246,7 +246,7 @@ if all == True:
             start = robot.getTime()
             estado = 'retroceso'
         
-    # ESTADO ARENA
+ # ESTADO ARENA
         if estado == 'arena':
             print("estado arena")
             if floor == 'pozo':
@@ -270,7 +270,7 @@ if all == True:
                 estado = 'girito'
                 # print("Paso al estado:",estado)
 
-    # ESTADO RETROCESO
+ # ESTADO RETROCESO
         if estado == 'retroceso':
             print("estado retroceso")
             speeds_per_floor(floor,-speed)
@@ -279,27 +279,32 @@ if all == True:
                 # print(robot.getTime())
                 estado = 'girito'
 
-    # ESTADO GIRITO
+ # ESTADO GIRITO 
         if estado == 'girito':
             print("estado girito")
-            '''angule = random.choice([90, 270])
-            if rotar(angule) == True: # Como ya detectó algo en el estado 1, rota 90
-                if distancia_sensor1.getValue() <= media_baldoza: # Lee si detecta algo.
-                    # print("Valores del sensor de distancia:",distancia_sensor1.getValue())
-                    rotar(angule) # Si si, rota de vuelta
-                else:
-                    estado = 'avanzar_libre' # Si no, vuelve al estado 1
-                    # print("paso al estado:",estado)'''
-
-
-            if distancia_sensorDer.getValue() >= media_baldoza:
-                if rotar(90) == True: # Como ya detectó algo en el estado 1, rota 90
-                    '''if distancia_sensor1.getValue() <= media_baldoza: # Lee si detecta algo.
-                        # print("Valores del sensor de distancia:",distancia_sensor1.getValue())
-                        rotar(180) # Si si, rota de vuelta'''
+            
+            if distancia_sensorDer.getValue()  > 0.5:
+                print("voy a girar 90 grados")
+                if rotar(90) == True:
+                    print("rotacion finalizada pa")
                     estado = 'avanzar_libre'
-
-    # ESTADO GIRITO VICTIMA
+            else: rotar(270)
+            '''b = 0
+            if b == 0:
+                print("b =", b)
+                if distancia_sensorDer.getValue() > 0.06:
+                    print("voy a girar 90 grados")
+                    if rotar(90) == True:
+                        estado = 'avanzar_libre'
+                else: b = 1
+            if b == 1:
+                print("b =", b)
+                if distancia_sensorIzq.getValue() > 0.06:
+                    print("voy a girar 270 grados")
+                    if rotar(270) == True:
+                        estado = 'avanzar_libre'''
+        #distancia_sensorDer.getValue() > media_baldoza 
+ # ESTADO GIRITO VICTIMA
         if estado == 'girito_victima':
             print("estado girito_victima")
             img_centro = camera_centro.getImage()
@@ -314,7 +319,7 @@ if all == True:
                     start = robot.getTime()
                     estado = 'clasificacion' 
 
-    # ESTADO AVANZAR LIBRE
+ # ESTADO AVANZAR LIBRE
         if estado == 'avanzar_libre':
             print("estado avanzar_libre")
                 
@@ -337,7 +342,7 @@ if all == True:
                 estado = 'girito'
                 # print("Paso al estado:",estado)
 
-    # ESTADO DETECCIÓN DE VÍCTIMA
+ # ESTADO DETECCIÓN DE VÍCTIMA
         if estado == 'deteccion':
             print('Estado deteccion')
             avanzar(0.3)
@@ -352,7 +357,7 @@ if all == True:
             else:
                 print(f'{deteccion_izq}, {deteccion_der}')
         
-    # ESTADO CLASIFICACIÓN DE VÍCTIMA
+ # ESTADO CLASIFICACIÓN DE VÍCTIMA
         if estado == 'clasificacion':
             print("Estado clasificacion")
             avanzar(0)

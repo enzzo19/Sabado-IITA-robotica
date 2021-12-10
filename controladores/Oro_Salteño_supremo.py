@@ -22,6 +22,10 @@ global finalLetter
 # Distance sensor initialization
 distancia_sensor1 = robot.getDevice("distance sensor1")
 distancia_sensor1.enable(timeStep)
+distancia_sensorDer = robot.getDevice("distance sensor2")
+distancia_sensorDer.enable(timeStep)
+distancia_sensorIzq = robot.getDevice("distance sensor2")
+distancia_sensorIzq.enable(timeStep)
 maxima_distancia = 0.4
 
 # Motor initialization
@@ -257,15 +261,20 @@ while robot.step(timeStep) != -1:
 
     # ESTADO GIRITO
     if estado == 'girito':
-        print("estado girito")
-        angule = random.choice([90, 270])
-        if rotar(angule) == True: # Como ya detectó algo en el estado 1, rota 90
-            if distancia_sensor1.getValue() <= media_baldoza: # Lee si detecta algo.
-                # print("Valores del sensor de distancia:",distancia_sensor1.getValue())
-                rotar(angule) # Si si, rota de vuelta
-            else:
-                estado = 'avanzar_libre' # Si no, vuelve al estado 1
-                # print("paso al estado:",estado)
+            print("estado girito")
+            b = 0
+            if b == 0:
+                if distancia_sensorDer.getValue() > 0.5:
+                    print("voy a girar 90 grados")
+                    if rotar(90) == True:
+                        print("rotacion finalizada pa")
+                        estado = 'avanzar_libre'
+                else: b = 1
+            if b == 1:
+                print("voy a girar 270 grados")
+                if rotar(270) == True:
+                    print("rotacion finalizada pa")
+                    estado = 'avanzar_libre'
     
     # ESTADO GIRITO VICTIMA
     if estado == 'girito_victima':
