@@ -9,9 +9,9 @@ import random
 import time
 import struct
 
-robot = Robot() # Create robot object
-timeStep = 32   # timeStep = numero de milisegundos entre actualizaciones mundiales (del mundo)
-tile_size = 0.12 # Tamaño de casilla
+robot = Robot()
+timeStep = 32
+tile_size = 0.12
 angulo_actual = 0
 tiempo_anterior = 0
 media_baldoza = 0.06
